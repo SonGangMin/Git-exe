@@ -1,3 +1,119 @@
-<%- include('./layout.ejs') %>
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title></title>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+  </head>
+  <style>
+    li {
+      display: flex;
+      justify-content: space-between;
+    }
+  </style>
+  <body>
+    <div id="board">
+      이름: <input type="text" name="name" id="name" /> email:
+      <input type="text" name="email" id="email" /> 내용:
+      <input type="text" name="content" id="content" />
+      <button class="submit">등록</button>
+    </div>
+    <div>
+      <ul id="guest-book"></ul>
+    </div>
+    <script>
+      const form = document.querySelector("form");
+      const submit = document.querySelector(".submit");
+      submit.addEventListener("click", async (event) => {
+        const nameInput = document.querySelector("#name").value;
+        const emailInput = document.querySelector("#email").value;
+        const contentInput = document.querySelector("#content").value;
+        event.preventDefault();
+        const formData = new FormData();
+        formData.append("name", nameInput);
+        formData.append("email", emailInput);
+        formData.append("content", contentInput);
+        try {
+          await axios.post("/", {
+            name: nameInput,
+            email: emailInput,
+            content: contentInput,
+          });
+          loadBoards();
+        } catch (error) {
+          console.error(error);
+        }
+      });
+      async function loadBoards() {
+        try {
+          const response = await axios.get("/list");
+          const boards = response.data;
+          const guestBook = document.getElementById("guest-book");
+          guestBook.innerHTML = "";
+          boards.forEach((board) => {
+            const li = document.createElement("li");
+            li.innerHTML = `
+                <p>이름: ${board.name}</p> <div class="n1" style="display:none;"><input type="text" name="name" value=${board.name} id="name-${board.id}"></div>
+                <p>email: ${board.email}</p> <div class="n1" style="display:none;"><input type="text" name="email" value=${board.email} id="email-${board.id}"></div>
+                <p>내용: ${board.content}</p> <div class="n1" style="display:none;"><input type="text" name="content" value=${board.content} id="content-${board.id}"></div>
+                <button class='edit' data-id="${board.id}">수정</button>
+                <button class='update-btn' data-id="${board.id}" style="display:none;">수정</button>
+                <button class='del-btn' data-id=${board.id}>삭제</button>
+                `;
+            guestBook.appendChild(li);
 
-<div><%= data %></div>
+            const updateBtn = li.querySelector(".update-btn");
+            updateBtn.addEventListener("click", async () => {
+              const boardId = updateBtn.dataset.id;
+              const name = document.getElementById(`name-${boardId}`).value;
+              const email = document.getElementById(`email-${boardId}`).value;
+              const content = document.getElementById(
+                `content-${boardId}`
+              ).value;
+              try {
+                await axios.put(`/update/${boardId}`, {
+                  name,
+                  email,
+                  content,
+                });
+                await loadBoards();
+              } catch (err) {
+                console.error(err);
+              }
+            });
+            const deleteBtn = li.querySelector(".del-btn");
+            deleteBtn.addEventListener("click", async () => {
+              const boardId = deleteBtn.dataset.id;
+
+              try {
+                await axios.delete(`/delete/${boardId}`);
+                await loadBoards();
+              } catch (err) {
+                console.error(err);
+              }
+            });
+          });
+          const edits = document.querySelectorAll(".edit");
+          edits.forEach((target) => {
+            target.addEventListener("click", function () {
+              const test = this.parentNode.childNodes;
+              console.log(test);
+              test[1].style.display = "none";
+              test[5].style.display = "none";
+              test[9].style.display = "none";
+              test[3].style.display = "block";
+              test[7].style.display = "block";
+              test[11].style.display = "block";
+              test[15].style.display = "block";
+              this.style.display = "none";
+            });
+          });
+        } catch (err) {
+          console.error(err);
+        }
+      }
+
+      loadBoards();
+    </script>
+  </body>
+</html>

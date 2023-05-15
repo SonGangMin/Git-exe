@@ -1,22 +1,22 @@
 const express = require("express");
 const path = require("path");
 const fs = require("fs");
-const { boards } = require("../models");
+const { board } = require("../models");
 
 const router = express.Router();
 
 router.get("/", async (req, res) => {
-  res.render("index");
+  res.render("board");
 });
 router.post("/", async (req, res) => {
   const { name, email, content } = req.body;
   try {
-    await boards.create({
+    await board.create({
       name: name,
       email: email,
       content: content,
     });
-    res.redirect("/");
+    res.redirect("/board");
   } catch (err) {
     console.error(err);
     res.status(500).send({ message: "서버 오류가 발생했습니다." });
@@ -25,8 +25,8 @@ router.post("/", async (req, res) => {
 
 router.get("/list", async (req, res) => {
   try {
-    const board = await boards.findAll({});
-    res.json(board);
+    const boards = await board.findAll({});
+    res.json(boards);
   } catch (err) {
     console.error(err);
   }
@@ -36,7 +36,7 @@ router.put("/update/:id", async (req, res) => {
   const boardId = req.params.id;
   const { name, email, content } = req.body;
   try {
-    const updateboards = await boards.update(
+    const updateboards = await board.update(
       {
         name: name,
         email: email,
@@ -54,7 +54,7 @@ router.put("/update/:id", async (req, res) => {
 router.delete("/delete/:id", async (req, res) => {
   try {
     const boardId = req.params.id;
-    await boards.destroy({
+    await board.destroy({
       where: {
         id: boardId,
       },
